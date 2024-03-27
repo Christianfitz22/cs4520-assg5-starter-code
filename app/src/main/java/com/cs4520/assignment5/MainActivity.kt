@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
         //val dataList = List(20) {"test"}
 
         val dataList by productViewModel.getProductData().observeAsState(listOf())
-
+        // other case handling needed
 
         LazyColumn {
             items(items = dataList) { data -> ProductEntryParse(data)}

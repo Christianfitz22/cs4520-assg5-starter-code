@@ -22,6 +22,9 @@ class ProductViewModel() : ViewModel() {
 
     private lateinit var database: ProductDatabase
 
+    private val _apiState = MutableLiveData<ApiCallState>()
+    val apiState : LiveData<ApiCallState> = _apiState
+
 
 
     init {
@@ -44,8 +47,13 @@ class ProductViewModel() : ViewModel() {
         return productResponseData
     }
 
+    fun getApiState(): LiveData<ApiCallState> {
+        return apiState
+    }
+
     fun makeApiCall() {
         println("api call function begins")
+        _apiState.value = ApiCallState.REQUESTED
 
         val productDao = database.productDao()
 
@@ -67,6 +75,7 @@ class ProductViewModel() : ViewModel() {
                     if (productDataEntries.isEmpty()) {
                         println("product data entries empty")
                         _productResponseData.value = ArrayList<ProductData>()
+                        _apiState.value = ApiCallState.EMPTY
                     } else {
                         println("product data entries found")
                         val productData = ArrayList<ProductData>()
@@ -76,6 +85,7 @@ class ProductViewModel() : ViewModel() {
                         }
 
                         _productResponseData.value = productData
+                        _apiState.value = ApiCallState.SUCCESS
                     }
                 }
                 return@launch
@@ -89,6 +99,7 @@ class ProductViewModel() : ViewModel() {
                         println("response is successful")
                         // update database with gotten response
                         _productResponseData.value = response.body()
+                        _apiState.value = ApiCallState.SUCCESS
 
                         val productDataEntries = ArrayList<ProductDBEntry>()
 
@@ -101,12 +112,15 @@ class ProductViewModel() : ViewModel() {
 
                     } else {
                         _productResponseData.value = ArrayList<ProductData>()
+                        _apiState.value = ApiCallState.ERROR
                         println("Attempted to get all products but api call failed")
                     }
                 } catch (e: HttpException) {
                     println("HTTP exception found")
+                    _apiState.value = ApiCallState.FAILURE
                 } catch (e: Throwable) {
                     println("Unknown exception found")
+                    _apiState.value = ApiCallState.FAILURE
                 }
             }
         }

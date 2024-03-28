@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainNavigation() {
         val navController = rememberNavController()
-        NavHost(navController, startDestination = "listPage") {
+        NavHost(navController, startDestination = "loginPage") {
             composable("loginPage") { LoginPage(onNavigateToListPage = {navController.navigate("listPage")})}
             composable("listPage") { ListPage()}
         }
@@ -99,6 +99,7 @@ class MainActivity : ComponentActivity() {
 
     fun loginClicked(usernameText: String, passwordText: String, onNavigateToListPage: () -> Unit) {
         if (usernameText == "admin" && passwordText == "admin") {
+            productViewModel.makeApiCall()
             onNavigateToListPage()
         } else {
             Toast.makeText(applicationContext, "Provided login is invalid.", Toast.LENGTH_SHORT).show()
@@ -111,8 +112,40 @@ class MainActivity : ComponentActivity() {
 
         val dataList by productViewModel.getProductData().observeAsState(listOf())
 
-        val apiState by productViewModel.getApiState().observeAsState()
+        val apiState by productViewModel.getApiCallState().observeAsState()
 
+        if (apiState == ApiCallState.REQUESTED) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator(
+                    modifier = Modifier.width(100.dp).align(Alignment.Center),
+                    color = MaterialTheme.colors.primary,
+                )
+            }
+        } else if (apiState == ApiCallState.FAILURE || apiState == ApiCallState.ERROR) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Text(
+                    text = "A random error has occurred.",
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        } else if (apiState == ApiCallState.EMPTY) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Text(
+                    text = "No products available.",
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        } else {
+            LazyColumn {
+                items(items = dataList) { data -> ProductEntryParse(data)}
+            }
+        }
+
+
+
+
+
+        /*
         if (dataList.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize()) {
                 CircularProgressIndicator(
@@ -125,6 +158,7 @@ class MainActivity : ComponentActivity() {
         LazyColumn {
             items(items = dataList) { data -> ProductEntryParse(data)}
         }
+        */
     }
 
     @Composable

@@ -47,7 +47,7 @@ class ProductViewModel() : ViewModel() {
         return productResponseData
     }
 
-    fun getApiState(): LiveData<ApiCallState> {
+    fun getApiCallState(): LiveData<ApiCallState> {
         return apiState
     }
 
@@ -98,6 +98,12 @@ class ProductViewModel() : ViewModel() {
                     if (response.isSuccessful) {
                         println("response is successful")
                         // update database with gotten response
+                        if (response.body()!!.isEmpty()) {
+                            _productResponseData.value = ArrayList<ProductData>()
+                            _apiState.value = ApiCallState.EMPTY
+                            return@withContext
+                        }
+
                         _productResponseData.value = response.body()
                         _apiState.value = ApiCallState.SUCCESS
 

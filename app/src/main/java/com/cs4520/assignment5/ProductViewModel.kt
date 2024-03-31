@@ -79,6 +79,7 @@ class ProductViewModel() : ViewModel() {
                     } else {
                         println("product data entries found")
                         val productData = ArrayList<ProductData>()
+                        println("data entries size: " + productDataEntries.size)
 
                         for (item in productDataEntries) {
                             productData.add(ProductData(item.name, item.type, item.expiryDate, item.price))
@@ -109,9 +110,13 @@ class ProductViewModel() : ViewModel() {
 
                         val productDataEntries = ArrayList<ProductDBEntry>()
 
+                        println("size of response body: " + response.body()!!.size)
+
                         for (item in response.body()!!) {
                             productDataEntries.add(ProductDBEntry(0, item.name, item.type, item.expiryDate, item.price))
                         }
+
+                        println("size of dao insertion: " + productDataEntries.size)
 
                         //productDao.deleteAll()
                         productDao.insertAll(productDataEntries)

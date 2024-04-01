@@ -3,6 +3,10 @@ package com.cs4520.assignment5
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,12 +15,12 @@ import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import retrofit2.Response
 import java.net.UnknownHostException
+import java.util.concurrent.TimeUnit
 
 class ProductViewModel() : ViewModel() {
     private val _productResponseData = MutableLiveData<ArrayList<ProductData>>()
     // rather than ProductResponseModel, this needs to be an ArrayList of ProductData
     val productResponseData : LiveData<ArrayList<ProductData>> = _productResponseData
-    private val repository = ProductRepository()
 
     //var productAdaptor: ProductAdaptor = ProductAdaptor()
 
@@ -28,9 +32,10 @@ class ProductViewModel() : ViewModel() {
 
 
     init {
+        println("init productview run")
         // database must be set here
         database = DatabaseHolder.database
-        makeApiCall()
+        //makeApiCall()
     }
 
     /*
@@ -49,6 +54,21 @@ class ProductViewModel() : ViewModel() {
 
     fun getApiCallState(): LiveData<ApiCallState> {
         return apiState
+    }
+
+    fun makeWorkRequest() {
+        println("Work request made")
+        val constraints = Constraints.Builder()
+            .setRequiresCharging(false)
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val workRequest = PeriodicWorkRequestBuilder<ProductCoroutineWorker>(1, TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .setInitialDelay(1, TimeUnit.HOURS)
+            .build()
+        WorkManagerHolder.workManager.enqueueUniquePeriodicWork("productUpdater",
+            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            workRequest)
     }
 
     fun makeApiCall() {
